@@ -55,6 +55,12 @@ public class SwissBikeDetailedUtilityEstimator extends BikeUtilityEstimator {
         return Utils.originIsHome(trip) ? parameters.bike.betaOriginHome_u : 0.0;
     }
 
+    /* 
+    protected double estimateSlopeUtility(DiscreteModeChoiceTrip trip) {
+        return parameters.bike.betaSlope * Math.max(0.0, personVariables.age_a - 18);
+    }
+    */
+
     protected double estimateRegionalUtility(SwissPersonVariables personVariables) {
         if (personVariables.cantonCluster == 1) {
             return parameters.bike.betaRegion1_u;

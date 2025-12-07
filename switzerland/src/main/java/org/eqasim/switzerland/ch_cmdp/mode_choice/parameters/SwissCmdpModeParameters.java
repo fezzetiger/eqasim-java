@@ -24,6 +24,7 @@ public class SwissCmdpModeParameters extends SwissModeParameters {
         public double alpha_u = 0.0;
         public double betaTravelTime_u_min = 0.0;
         public double travelTimeExponent = 1.0;
+        public double betaSlope = 0.0;
 
         public double betaAge_u = 0.0;
         public double betaSex_u = 0.0;
@@ -122,6 +123,7 @@ public class SwissCmdpModeParameters extends SwissModeParameters {
         SwissCmdpModeParameters parameters = new SwissCmdpModeParameters();
         // bike
         parameters.bike.alpha_u= 4.49243634582002;
+        parameters.bike.betaSlope= -0.006542507;
         parameters.bike.betaAge_u= 0.002887604600585483;
         parameters.bike.betaDestinationWork_u= 0.3089944496762585;
         parameters.bike.betaOriginHome_u= 0.039074702359104145;
