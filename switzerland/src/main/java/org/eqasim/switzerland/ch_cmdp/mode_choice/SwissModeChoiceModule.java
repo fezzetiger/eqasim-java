@@ -32,6 +32,7 @@ import org.eqasim.switzerland.ch_cmdp.mode_choice.parameters.SwissCmdpModeParame
 import org.eqasim.switzerland.ch_cmdp.mode_choice.utilities.estimators.*;
 import org.eqasim.switzerland.ch_cmdp.mode_choice.utilities.mode_availability.SwissDetailedModeAvailability;
 import org.eqasim.switzerland.ch_cmdp.mode_choice.utilities.predictors.CarPassengerPredictor;
+import org.eqasim.switzerland.ch_cmdp.mode_choice.utilities.predictors.ElevationPredictor;
 import org.eqasim.switzerland.ch_cmdp.mode_choice.utilities.predictors.SwissPersonPredictor;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.contribs.discrete_mode_choice.replanning.TripListConverter;
@@ -85,6 +86,7 @@ public class SwissModeChoiceModule extends AbstractEqasimExtension {
 		bind(SwissPersonPredictor.class);
 		bind(CarPassengerPredictor.class);
 		bind(SwissPtRoutePredictor.class);
+		bind(ElevationPredictor.class).asEagerSingleton();
 
 		bind(ModeParameters.class).to(SwissCmdpModeParameters.class).asEagerSingleton();
 

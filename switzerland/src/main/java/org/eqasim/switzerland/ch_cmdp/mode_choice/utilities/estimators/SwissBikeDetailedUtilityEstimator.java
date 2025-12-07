@@ -7,7 +7,9 @@ import org.eqasim.core.simulation.mode_choice.utilities.predictors.BikePredictor
 import org.eqasim.core.simulation.mode_choice.utilities.predictors.PredictorUtils;
 import org.eqasim.core.simulation.mode_choice.utilities.variables.BikeVariables;
 import org.eqasim.switzerland.ch_cmdp.mode_choice.parameters.SwissCmdpModeParameters;
+import org.eqasim.switzerland.ch_cmdp.mode_choice.utilities.predictors.ElevationPredictor;
 import org.eqasim.switzerland.ch_cmdp.mode_choice.utilities.predictors.SwissPersonPredictor;
+import org.eqasim.switzerland.ch_cmdp.mode_choice.utilities.variables.ElevationVariables;
 import org.eqasim.switzerland.ch_cmdp.mode_choice.utilities.variables.SwissPersonVariables;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.api.core.v01.population.PlanElement;
@@ -23,16 +25,18 @@ public class SwissBikeDetailedUtilityEstimator extends BikeUtilityEstimator {
     private final SwissPersonPredictor personPredictor;
     private final BikePredictor bikePredictor;
     private final VariablesWriter variablesWriter;
+    private final ElevationPredictor elevationPredictor;
 
     @Inject
     public SwissBikeDetailedUtilityEstimator(SwissCmdpModeParameters parameters, SwissPersonPredictor personPredictor,
-                                             BikePredictor bikePredictor, VariablesWriter variablesWriter) {
+                                             BikePredictor bikePredictor, VariablesWriter variablesWriter, ElevationPredictor elevationPredictor) {
         super(parameters, personPredictor.delegate, bikePredictor);
 
         this.parameters = parameters;
         this.personPredictor = personPredictor;
         this.bikePredictor = bikePredictor;
         this.variablesWriter = variablesWriter;
+        this.elevationPredictor = elevationPredictor;
     }
 
     protected double estimateConstantUtility() {
@@ -55,11 +59,9 @@ public class SwissBikeDetailedUtilityEstimator extends BikeUtilityEstimator {
         return Utils.originIsHome(trip) ? parameters.bike.betaOriginHome_u : 0.0;
     }
 
-    /* 
-    protected double estimateSlopeUtility(DiscreteModeChoiceTrip trip) {
-        return parameters.bike.betaSlope * Math.max(0.0, personVariables.age_a - 18);
+    protected double estimateSlopeUtility(ElevationVariables elevationVariables) {
+    return parameters.bike.betaSlope * elevationVariables.slope;
     }
-    */
 
     protected double estimateRegionalUtility(SwissPersonVariables personVariables) {
         if (personVariables.cantonCluster == 1) {
@@ -100,6 +102,8 @@ public class SwissBikeDetailedUtilityEstimator extends BikeUtilityEstimator {
     public double estimateUtility(Person person, DiscreteModeChoiceTrip trip, List<? extends PlanElement> elements) {
         SwissPersonVariables personVariables = personPredictor.predictVariables(person, trip, elements);
         BikeVariables bikeVariables = bikePredictor.predictVariables(person, trip, elements);
+        ElevationVariables elevationVariables = elevationPredictor.predict(person, trip, elements);
+
 
         double utility = 0.0;
         utility += estimateConstantUtility();
@@ -113,18 +117,20 @@ public class SwissBikeDetailedUtilityEstimator extends BikeUtilityEstimator {
         utility += estimateUrbanDestinationUtility(trip);
         utility += estimateWorkDestinationUtility(trip);
         utility += estimatedLongDistanceUtility(trip);
+        utility += estimateSlopeUtility(elevationVariables);
+
 
         utility += estimateCantonUtility(person);
 
         if(variablesWriter.isInitiated()) {
-            writeVariablesToCsv(person, trip, bikeVariables, personVariables, utility);
+            writeVariablesToCsv(person, trip, bikeVariables, personVariables, utility, elevationVariables);
         }
 
         return utility;
     }
 
     private void writeVariablesToCsv(Person person, DiscreteModeChoiceTrip trip, BikeVariables bikevariable,
-                                     SwissPersonVariables personVariables, double utility) {
+                                     SwissPersonVariables personVariables, double utility, ElevationVariables elevationVariables) {
         double departureTime = trip.getDepartureTime();
         int tripIndex = trip.getIndex();
         String personId = person.getId().toString();
@@ -140,6 +146,7 @@ public class SwissBikeDetailedUtilityEstimator extends BikeUtilityEstimator {
         bikeAttributes.put("destinationWork", Utils.destinationIsWork(trip) ? "1" : "0");
         bikeAttributes.put("urbanDestination", Utils.destinationIsUrban(trip) ? "1" : "0");
         bikeAttributes.put("shortDistance", Utils.isShortDistanceTrip(trip) ? "1" : "0");
+        bikeAttributes.put("slope", String.valueOf(elevationVariables.slope));
 
         bikeAttributes.put("travelTime_min", String.valueOf(bikevariable.travelTime_min));
 
