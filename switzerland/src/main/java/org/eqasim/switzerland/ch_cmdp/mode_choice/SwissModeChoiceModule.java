@@ -4,9 +4,6 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.opencsv.exceptions.CsvValidationException;
 import org.eqasim.core.components.calibration.CalibrationConfigGroup;
-import org.eqasim.core.components.calibration.Optimizer;
-import org.eqasim.core.components.calibration.OptimizerHandler;
-import org.eqasim.core.components.calibration.VariablesWriter;
 import org.eqasim.core.components.config.EqasimConfigGroup;
 import org.eqasim.core.components.fast_calibration.AlphaCalibrator;
 import org.eqasim.core.components.fast_calibration.AlphaCalibratorConfig;
@@ -14,16 +11,11 @@ import org.eqasim.core.components.fast_calibration.FastCalibration;
 import org.eqasim.core.simulation.mode_choice.AbstractEqasimExtension;
 import org.eqasim.core.simulation.mode_choice.ParameterDefinition;
 import org.eqasim.core.simulation.mode_choice.parameters.ModeParameters;
-import org.eqasim.switzerland.ch.calibration.AlphaCantonCalibrator;
 import org.eqasim.switzerland.ch.config.SwissPTZonesConfigGroup;
 import org.eqasim.switzerland.ch.mode_choice.constraints.LoopModesConstraint;
 import org.eqasim.switzerland.ch.mode_choice.costs.pt.SwissPtStageCostCalculator;
 import org.eqasim.switzerland.ch_cmdp.mode_choice.utilities.predictors.SwissPtRoutePredictor;
 import org.eqasim.switzerland.ch.utils.pricing.inputs.*;
-import org.eqasim.switzerland.ch_cmdp.calibration.AlphaClusterCalibrator;
-import org.eqasim.switzerland.ch_cmdp.calibration.CmdpOptimizer;
-import org.eqasim.switzerland.ch_cmdp.calibration.CmdpOptimizerHandler;
-import org.eqasim.switzerland.ch_cmdp.calibration.CmdpVariablesWriter;
 import org.eqasim.switzerland.ch_cmdp.mode_choice.costs.SwissCarCostModel;
 import org.eqasim.switzerland.ch_cmdp.mode_choice.costs.SwissParkingCostModel;
 import org.eqasim.switzerland.ch_cmdp.mode_choice.costs.SwissPtCostModel;
@@ -66,11 +58,6 @@ public class SwissModeChoiceModule extends AbstractEqasimExtension {
 
 	@Override
 	protected void installEqasimExtension() {
-
-		bind(VariablesWriter.class).to(CmdpVariablesWriter.class).asEagerSingleton();
-		bind(Optimizer.class).to(CmdpOptimizer.class).asEagerSingleton();
-		bind(OptimizerHandler.class).to(CmdpOptimizerHandler.class).asEagerSingleton();
-
 		bindTripConstraintFactory(LOOP_CONSTRAINT_NAME).to(LoopModesConstraint.Factory.class);
 
 		bindCostModel(CAR_COST_MODEL_NAME).to(SwissCarCostModel.class);
@@ -92,17 +79,13 @@ public class SwissModeChoiceModule extends AbstractEqasimExtension {
 
 		// Calibration
 		AlphaCalibratorConfig calConfig = AlphaCalibratorConfig.getOrCreate(getConfig());
+		// Debug logging: helps diagnose if calibration is unexpectedly activated
+		System.out.println("Alpha calibration: activate=" + calConfig.isActivate() + ", level=" + calConfig.getLevel());
 		if (calConfig.isActivate()) {
 			String level = calConfig.getLevel().toLowerCase();
 			switch (level) {
 				case "global":
 					bind(FastCalibration.class).to(AlphaCalibrator.class).asEagerSingleton();
-					break;
-				case "canton":
-					bind(FastCalibration.class).to(AlphaCantonCalibrator.class).asEagerSingleton();
-					break;
-				case "cluster":
-					bind(FastCalibration.class).to(AlphaClusterCalibrator.class).asEagerSingleton();
 					break;
 				default:
 					throw new IllegalArgumentException("Unknown calibration level: " + level);
@@ -142,68 +125,6 @@ public class SwissModeChoiceModule extends AbstractEqasimExtension {
 	@Singleton
 	public SwissParkingCostModel provideSwissParkingCostModel(SwissCostParameters parameters) {
 		return new SwissParkingCostModel(parameters);
-	}
-
-	@Provides
-	@Singleton
-	public AlphaCantonCalibrator provideAlphaCantonCalibrator(Scenario scenario,
-															  OutputDirectoryHierarchy outputHierarchy,
-															  SwissCmdpModeParameters modeParameters,
-															  TripListConverter tripListConverter) {
-		AlphaCalibratorConfig calConfig = AlphaCalibratorConfig.getOrCreate(getConfig());
-
-		String filePath = calConfig.getFilePath();
-		if (filePath.isEmpty()) {
-			throw new IllegalArgumentException("You must provide the file path to the cantons mode share csv file when using canton level calibration.");
-		}
-		Map<String, Double> targetModeShares = Map.of(
-				"car", calConfig.getCarModeShare(),
-				"pt", calConfig.getPtModeShare(),
-				"walk", calConfig.getWalkModeShare(),
-				"bike", calConfig.getBikeModeShare(),
-				"car_passenger", calConfig.getCarPassengerModeShare()
-		);
-
-		return new AlphaCantonCalibrator(scenario,outputHierarchy,targetModeShares, modeParameters,
-				tripListConverter, calConfig.getCalibratedModes() ,calConfig.getBeta(), filePath, calConfig.isActivate());
-	}
-
-	@Provides
-	@Singleton
-	public AlphaClusterCalibrator provideAlphaClusterCalibrator(Scenario scenario,
-															    OutputDirectoryHierarchy outputHierarchy,
-															    SwissCmdpModeParameters modeParameters,
-															    TripListConverter tripListConverter) {
-		AlphaCalibratorConfig calConfig = AlphaCalibratorConfig.getOrCreate(getConfig());
-
-		String filePath = calConfig.getFilePath();
-		if (filePath.isEmpty()) {
-			throw new IllegalArgumentException("You must provide the file path to the cantons mode share csv file when using canton level calibration.");
-		}
-		Map<String, Double> targetModeShares = Map.of(
-				"car", calConfig.getCarModeShare(),
-				"pt", calConfig.getPtModeShare(),
-				"walk", calConfig.getWalkModeShare(),
-				"bike", calConfig.getBikeModeShare(),
-				"car_passenger", calConfig.getCarPassengerModeShare()
-		);
-
-		return new AlphaClusterCalibrator(scenario,outputHierarchy, targetModeShares, modeParameters,
-				tripListConverter, calConfig.getCalibratedModes() ,calConfig.getBeta(), filePath, calConfig.isActivate());
-	}
-
-	@Provides
-	@Singleton
-	public CmdpOptimizer provideCmdpOptimizer() {
-		CalibrationConfigGroup calibrationConfig = CalibrationConfigGroup.getOrCreate(getConfig());
-		return new CmdpOptimizer(calibrationConfig);
-	}
-
-	@Provides
-	@Singleton
-	public CmdpOptimizerHandler provideCmdpOptimizerHandler(CalibrationConfigGroup calibrationConfig, OutputDirectoryHierarchy outputDirectoryHierarchy,
-															  EqasimConfigGroup eqasimConfigGroup, SwissCmdpModeParameters parameters, Optimizer optimizer) {
-		return new CmdpOptimizerHandler(calibrationConfig, outputDirectoryHierarchy, eqasimConfigGroup, parameters, optimizer);
 	}
 
 	@Provides
