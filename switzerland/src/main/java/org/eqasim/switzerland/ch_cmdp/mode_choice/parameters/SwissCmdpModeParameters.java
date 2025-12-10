@@ -1,14 +1,14 @@
 package org.eqasim.switzerland.ch_cmdp.mode_choice.parameters;
 
-import org.eqasim.core.simulation.mode_choice.parameters.ModeParameters;
-import org.eqasim.switzerland.ch.mode_choice.parameters.SwissModeParameters;
-
 import java.util.HashMap;
 import java.util.Map;
+
+import org.eqasim.switzerland.ch.mode_choice.parameters.SwissModeParameters;
 
 public class SwissCmdpModeParameters extends SwissModeParameters {
 
     public final SwissBikeParameters bike = new SwissBikeParameters();
+    public final SwissEbikeParameters ebike = new SwissEbikeParameters();
     public final SwissCarParameters car = new SwissCarParameters();
     public final SwissPTParameters pt = new SwissPTParameters();
     public final SwissWalkParameters walk = new SwissWalkParameters();
@@ -25,6 +25,23 @@ public class SwissCmdpModeParameters extends SwissModeParameters {
         public double betaTravelTime_u_min = 0.0;
         public double travelTimeExponent = 1.0;
         public double betaSlope = 0.0;
+
+        public double betaAge_u = 0.0;
+        public double betaSex_u = 0.0;
+        public double betaRegion1_u = 0.0;
+        public double betaRegion2_u = 0.0;
+        public double betaOriginHome_u = 0.0;
+        public double betaShortDistance_u = 0.0;
+        public double betaDestinationWork_u = 0.0;
+        public double betaUrbanDestination_u = 0.0;
+    }
+
+    public static class SwissEbikeParameters {
+        public double alpha_u = 0.0;
+        public double betaTravelTime_u_min = 0.0;
+        public double travelTimeExponent = 1.0;
+        public double betaSlope = 0.0;
+        public double betaIncomeShortfall_u = 0.0;
 
         public double betaAge_u = 0.0;
         public double betaSex_u = 0.0;
@@ -134,6 +151,20 @@ public class SwissCmdpModeParameters extends SwissModeParameters {
         parameters.bike.betaTravelTime_u_min= -0.8566142999818513;
         parameters.bike.betaUrbanDestination_u= -0.2517193568167992;
         parameters.bike.travelTimeExponent= 0.5618774653314881;
+        // ebike
+        parameters.ebike.alpha_u= 4.49243634582002;
+        // parameters.bike.betaSlope= -0.006542507;
+        parameters.ebike.betaAge_u= 0.002887604600585483;
+        parameters.ebike.betaDestinationWork_u= 0.3089944496762585;
+        parameters.ebike.betaOriginHome_u= 0.039074702359104145;
+        parameters.ebike.betaRegion1_u= -1.0152934666383386;
+        parameters.ebike.betaRegion2_u= -0.5132123209894008;
+        parameters.ebike.betaSex_u= -0.21656357067399193;
+        parameters.ebike.betaShortDistance_u= 0.15435727710538502;
+        parameters.ebike.betaTravelTime_u_min= -0.8566142999818513;
+        parameters.ebike.betaUrbanDestination_u= -0.2517193568167992;
+        parameters.ebike.travelTimeExponent= 0.5618774653314881;
+        parameters.ebike.betaIncomeShortfall_u = 0.0;
         // car
         parameters.car.additionalAccessEgressWalkTime_min= 0.0;
         parameters.car.alpha_u= 4.068909453602562;
@@ -210,6 +241,7 @@ public class SwissCmdpModeParameters extends SwissModeParameters {
     public Map<String, Double> getASCs() {
         Map<String, Double> alphas = new HashMap<>();
         alphas.put("car", this.car.alpha_u);
+        alphas.put("ebike", this.ebike.alpha_u);
         alphas.put("pt", this.pt.alpha_u);
         alphas.put("walk", this.walk.alpha_u);
         alphas.put("bike", this.bike.alpha_u);
@@ -222,7 +254,7 @@ public class SwissCmdpModeParameters extends SwissModeParameters {
         this.car.alpha_u = alphas.getOrDefault("car", this.car.alpha_u);
         this.pt.alpha_u = alphas.getOrDefault("pt", this.pt.alpha_u);
         this.walk.alpha_u = alphas.getOrDefault("walk", this.walk.alpha_u);
-        this.bike.alpha_u = alphas.getOrDefault("bike", this.bike.alpha_u);
+        this.ebike.alpha_u = alphas.getOrDefault("ebike", this.ebike.alpha_u);
         this.cp.alpha_u = alphas.getOrDefault("car_passenger", this.cp.alpha_u);
     }
 
@@ -232,6 +264,7 @@ public class SwissCmdpModeParameters extends SwissModeParameters {
                 {car, "car"},
                 {pt, "pt"},
                 {bike, "bike"},
+                {ebike, "ebike"},
                 {walk, "walk"},
                 {cp, "cp"},
                 {parking, "parking"},
