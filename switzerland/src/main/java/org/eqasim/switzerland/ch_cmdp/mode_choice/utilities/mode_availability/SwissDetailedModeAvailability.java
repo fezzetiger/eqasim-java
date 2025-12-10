@@ -1,12 +1,17 @@
 package org.eqasim.switzerland.ch_cmdp.mode_choice.utilities.mode_availability;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+
 import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.contribs.discrete_mode_choice.model.DiscreteModeChoiceTrip;
 import org.matsim.contribs.discrete_mode_choice.model.mode_availability.ModeAvailability;
 import org.matsim.core.population.PersonUtils;
-
-import java.util.*;
 
 public class SwissDetailedModeAvailability implements ModeAvailability {
     @Override
@@ -22,6 +27,7 @@ public class SwissDetailedModeAvailability implements ModeAvailability {
         // Modes that are always available
         modes.add(TransportMode.walk);
         modes.add(TransportMode.pt);
+        modes.add("ebike"); // ebike is available by default; affordability handled in utility
 
         // Check car availability
         boolean carAvailability = true;
@@ -68,14 +74,18 @@ public class SwissDetailedModeAvailability implements ModeAvailability {
         }
 
         // Add special modes "*_loop" if applicable
-        List<String> LOOP_MODES      = new ArrayList<>(Arrays.asList("walk_loop", "pt_loop", "bike_loop", "car_loop", "car_passenger_loop"));
-        List<String> LOOP_ATTRIBUTES = new ArrayList<>(Arrays.asList("hasWalkLoopTrip", "hasPtLoopTrip", "hasBikeLoopTrip", "hasCarLoopTrip", "hasCarPassengerLoopTrip"));
+        List<String> LOOP_MODES      = new ArrayList<>(Arrays.asList("walk_loop", "pt_loop", "bike_loop", "car_loop", "car_passenger_loop", "ebike_loop"));
+        List<String> LOOP_ATTRIBUTES = new ArrayList<>(Arrays.asList("hasWalkLoopTrip", "hasPtLoopTrip", "hasBikeLoopTrip", "hasCarLoopTrip", "hasCarPassengerLoopTrip", "hasEBikeLoopTrip"));
 
         for (int i = 0; i < LOOP_MODES.size(); i++){
             String mode = LOOP_MODES.get(i);
             String attribute = LOOP_ATTRIBUTES.get(i);
 
             Boolean hasLoopTrip = (Boolean) person.getAttributes().getAttribute(attribute);
+            // if no explicit ebike-loop flag is set, fall back to bike loop for ebike_loop
+            if (mode.equals("ebike_loop") && hasLoopTrip == null) {
+                hasLoopTrip = (Boolean) person.getAttributes().getAttribute("hasBikeLoopTrip");
+            }
             if (hasLoopTrip != null && hasLoopTrip) {
                 modes.add(mode);
             }
