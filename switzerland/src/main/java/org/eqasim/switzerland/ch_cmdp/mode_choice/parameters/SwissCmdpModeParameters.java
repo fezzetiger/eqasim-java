@@ -153,7 +153,7 @@ public class SwissCmdpModeParameters extends SwissModeParameters {
         parameters.bike.travelTimeExponent= 0.5618774653314881;
         // ebike
         parameters.ebike.alpha_u= 4.49243634582002;
-        // parameters.bike.betaSlope= -0.006542507;
+        parameters.ebike.betaSlope= -0.002;
         parameters.ebike.betaAge_u= 0.002887604600585483;
         parameters.ebike.betaDestinationWork_u= 0.3089944496762585;
         parameters.ebike.betaOriginHome_u= 0.039074702359104145;
@@ -164,7 +164,7 @@ public class SwissCmdpModeParameters extends SwissModeParameters {
         parameters.ebike.betaTravelTime_u_min= -0.8566142999818513;
         parameters.ebike.betaUrbanDestination_u= -0.2517193568167992;
         parameters.ebike.travelTimeExponent= 0.5618774653314881;
-        parameters.ebike.betaIncomeShortfall_u = 0.0;
+        parameters.ebike.betaIncomeShortfall_u = -0.8;
         // car
         parameters.car.additionalAccessEgressWalkTime_min= 0.0;
         parameters.car.alpha_u= 4.068909453602562;
@@ -184,7 +184,7 @@ public class SwissCmdpModeParameters extends SwissModeParameters {
         parameters.lambdaCostEuclideanDistance= -0.2568457559803551;
         parameters.lambdaCostIncome= -0.10073050052533078;
         parameters.referenceEuclideanDistance_km= 8.0;
-        parameters.referenceIncome= 3700.0;
+        parameters.referenceIncome= 4000.0;
         // cp
         parameters.cp.alpha_u= 2.8383476435353088;
         parameters.cp.betaAge_u= 0.006326590364129841;
