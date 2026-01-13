@@ -8,3 +8,5 @@ dependency-reduced-pom.xml
 *.idea
 simulation_output
 Zurich_10pct
+.m2-work 
+*.DS_Store* 
