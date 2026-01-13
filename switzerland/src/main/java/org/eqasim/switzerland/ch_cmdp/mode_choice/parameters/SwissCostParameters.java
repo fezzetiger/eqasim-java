@@ -13,6 +13,7 @@ public class SwissCostParameters implements ParameterDefinition {
 
 	public double ptRegionalRadius_km = 0.0;
 	public double bikeWorkIncentive_CHF_km = 0.0;
+	public double ebikeWorkIncentive_CHF_km = 0.0;
 
 	public static SwissCostParameters buildDefault() {
 		SwissCostParameters parameters = new SwissCostParameters();
@@ -29,6 +30,7 @@ public class SwissCostParameters implements ParameterDefinition {
 		
 		// bike incentive (default 0 => aus)
 		parameters.bikeWorkIncentive_CHF_km = 0.0;
+		parameters.ebikeWorkIncentive_CHF_km = 0.0;
 
 		return parameters;
 	}

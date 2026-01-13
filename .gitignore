@@ -7,4 +7,7 @@ dependency-reduced-pom.xml
 *.iml
 *.idea
 simulation_output
+simulation_output_incentive
 Zurich_10pct
+*.DS_Store
+

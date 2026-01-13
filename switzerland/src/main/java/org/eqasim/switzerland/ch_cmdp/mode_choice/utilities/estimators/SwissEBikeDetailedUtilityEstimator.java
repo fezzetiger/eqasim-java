@@ -7,6 +7,7 @@ import org.eqasim.core.simulation.mode_choice.utilities.predictors.BikePredictor
 import org.eqasim.core.simulation.mode_choice.utilities.predictors.PredictorUtils;
 import org.eqasim.core.simulation.mode_choice.utilities.variables.BikeVariables;
 import org.eqasim.switzerland.ch_cmdp.mode_choice.parameters.SwissCmdpModeParameters;
+import org.eqasim.switzerland.ch_cmdp.mode_choice.parameters.SwissCostParameters;
 import org.eqasim.switzerland.ch_cmdp.mode_choice.utilities.predictors.ElevationPredictor;
 import org.eqasim.switzerland.ch_cmdp.mode_choice.utilities.predictors.SwissPersonPredictor;
 import org.eqasim.switzerland.ch_cmdp.mode_choice.utilities.variables.ElevationVariables;
@@ -28,19 +29,22 @@ public class SwissEBikeDetailedUtilityEstimator extends BikeUtilityEstimator {
     private final BikePredictor bikePredictor;
     private final VariablesWriter variablesWriter;
     private final ElevationPredictor elevationPredictor;
+    private final SwissCostParameters costParameters;
 
     @Inject
     public SwissEBikeDetailedUtilityEstimator(SwissCmdpModeParameters parameters,
                                               SwissPersonPredictor personPredictor,
                                               BikePredictor bikePredictor,
                                               VariablesWriter variablesWriter,
-                                              ElevationPredictor elevationPredictor) {
+                                              ElevationPredictor elevationPredictor,
+                                              SwissCostParameters costParameters) {
         super(parameters, personPredictor.delegate, bikePredictor);
         this.parameters = parameters;
         this.personPredictor = personPredictor;
         this.bikePredictor = bikePredictor;
         this.variablesWriter = variablesWriter;
         this.elevationPredictor = elevationPredictor;
+        this.costParameters = costParameters;
     }
 
     protected double estimateConstantUtility() {
@@ -103,6 +107,17 @@ public class SwissEBikeDetailedUtilityEstimator extends BikeUtilityEstimator {
         return parameters.ebike.betaIncomeShortfall_u * shortfall;
     }
 
+    protected double estimateBikeWorkIncentiveUtility(DiscreteModeChoiceTrip trip, SwissPersonVariables personVariables) {
+        if (!(Utils.destinationIsWork(trip) || Utils.originIsWork(trip))) {
+            return 0.0;
+        }
+        double distance_km = PredictorUtils.calculateEuclideanDistance_km(trip);
+        double incentive_CHF = costParameters.ebikeWorkIncentive_CHF_km * distance_km;
+
+        double interaction = Utils.interaction(distance_km, personVariables.income, parameters);
+        return parameters.betaCost_u_MU * (-incentive_CHF) * interaction;
+    }
+
     protected double estimateCantonUtility(Person person) {
         Object cantonObj = person.getAttributes().getAttribute("cantonName");
         if (cantonObj instanceof String canton) {
@@ -130,6 +145,7 @@ public class SwissEBikeDetailedUtilityEstimator extends BikeUtilityEstimator {
         utility += estimatedLongDistanceUtility(trip);
         utility += estimateSlopeUtility(elevationVariables);
         utility += estimateIncomePenalty(personVariables);
+        utility += estimateBikeWorkIncentiveUtility(trip, personVariables);
         utility += estimateCantonUtility(person);
 
         if (variablesWriter.isInitiated()) {
