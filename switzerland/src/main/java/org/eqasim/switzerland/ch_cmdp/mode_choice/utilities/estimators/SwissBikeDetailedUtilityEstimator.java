@@ -14,6 +14,8 @@ import org.eqasim.switzerland.ch_cmdp.mode_choice.utilities.variables.SwissPerso
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.api.core.v01.population.PlanElement;
 import org.matsim.contribs.discrete_mode_choice.model.DiscreteModeChoiceTrip;
+import org.eqasim.switzerland.ch_cmdp.mode_choice.parameters.SwissCostParameters;
+
 
 import java.util.HashMap;
 import java.util.List;
@@ -26,10 +28,11 @@ public class SwissBikeDetailedUtilityEstimator extends BikeUtilityEstimator {
     private final BikePredictor bikePredictor;
     private final VariablesWriter variablesWriter;
     private final ElevationPredictor elevationPredictor;
+    private final SwissCostParameters parametersCost;
 
     @Inject
     public SwissBikeDetailedUtilityEstimator(SwissCmdpModeParameters parameters, SwissPersonPredictor personPredictor,
-                                             BikePredictor bikePredictor, VariablesWriter variablesWriter, ElevationPredictor elevationPredictor) {
+                                             BikePredictor bikePredictor, VariablesWriter variablesWriter, ElevationPredictor elevationPredictor, SwissCostParameters parametersCost) {
         super(parameters, personPredictor.delegate, bikePredictor);
 
         this.parameters = parameters;
@@ -37,6 +40,7 @@ public class SwissBikeDetailedUtilityEstimator extends BikeUtilityEstimator {
         this.bikePredictor = bikePredictor;
         this.variablesWriter = variablesWriter;
         this.elevationPredictor = elevationPredictor;
+        this.parametersCost = parametersCost;
     }
 
     protected double estimateConstantUtility() {
@@ -98,6 +102,18 @@ public class SwissBikeDetailedUtilityEstimator extends BikeUtilityEstimator {
         return 0.0;
     }
 
+    protected double estimateBikeWorkIncentiveUtility(DiscreteModeChoiceTrip trip, SwissPersonVariables personVariables) {
+        if (!(Utils.destinationIsWork(trip) || Utils.originIsWork(trip))) {
+            return 0.0;
+        }
+        double distance_km = PredictorUtils.calculateEuclideanDistance_km(trip);
+        double incentive_CHF = parametersCost.bikeWorkIncentive_CHF_km * distance_km;
+
+        double interaction = Utils.interaction(distance_km, personVariables.income, parameters);
+        return parameters.betaCost_u_MU * (-incentive_CHF) * interaction;
+    }
+
+
     @Override
     public double estimateUtility(Person person, DiscreteModeChoiceTrip trip, List<? extends PlanElement> elements) {
         SwissPersonVariables personVariables = personPredictor.predictVariables(person, trip, elements);
@@ -118,7 +134,7 @@ public class SwissBikeDetailedUtilityEstimator extends BikeUtilityEstimator {
         utility += estimateWorkDestinationUtility(trip);
         utility += estimatedLongDistanceUtility(trip);
         utility += estimateSlopeUtility(elevationVariables);
-
+        utility += estimateBikeWorkIncentiveUtility(trip, personVariables);
 
         utility += estimateCantonUtility(person);
 
