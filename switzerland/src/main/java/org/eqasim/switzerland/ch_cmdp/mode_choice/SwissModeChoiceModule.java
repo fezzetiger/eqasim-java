@@ -4,6 +4,9 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.opencsv.exceptions.CsvValidationException;
 import org.eqasim.core.components.calibration.CalibrationConfigGroup;
+import org.eqasim.core.components.calibration.Optimizer;
+import org.eqasim.core.components.calibration.OptimizerHandler;
+import org.eqasim.core.components.calibration.VariablesWriter;
 import org.eqasim.core.components.config.EqasimConfigGroup;
 import org.eqasim.core.components.fast_calibration.AlphaCalibrator;
 import org.eqasim.core.components.fast_calibration.AlphaCalibratorConfig;
@@ -11,11 +14,16 @@ import org.eqasim.core.components.fast_calibration.FastCalibration;
 import org.eqasim.core.simulation.mode_choice.AbstractEqasimExtension;
 import org.eqasim.core.simulation.mode_choice.ParameterDefinition;
 import org.eqasim.core.simulation.mode_choice.parameters.ModeParameters;
+import org.eqasim.core.components.calibration.optimizer.StandardOptimizer;
 import org.eqasim.switzerland.ch.config.SwissPTZonesConfigGroup;
 import org.eqasim.switzerland.ch.mode_choice.constraints.LoopModesConstraint;
 import org.eqasim.switzerland.ch.mode_choice.costs.pt.SwissPtStageCostCalculator;
 import org.eqasim.switzerland.ch_cmdp.mode_choice.utilities.predictors.SwissPtRoutePredictor;
 import org.eqasim.switzerland.ch.utils.pricing.inputs.*;
+import org.eqasim.switzerland.ch_cmdp.calibration.AlphaClusterCalibrator;
+import org.eqasim.switzerland.ch_cmdp.calibration.CmdpOptimizer;
+import org.eqasim.switzerland.ch_cmdp.calibration.CmdpOptimizerHandler;
+import org.eqasim.switzerland.ch_cmdp.calibration.CmdpVariablesWriter;
 import org.eqasim.switzerland.ch_cmdp.mode_choice.costs.SwissCarCostModel;
 import org.eqasim.switzerland.ch_cmdp.mode_choice.costs.SwissParkingCostModel;
 import org.eqasim.switzerland.ch_cmdp.mode_choice.costs.SwissPtCostModel;
@@ -59,6 +67,11 @@ public class SwissModeChoiceModule extends AbstractEqasimExtension {
 
 	@Override
 	protected void installEqasimExtension() {
+		// Calibration writer binding (Guice needs explicit binding for VariablesWriter used in estimators)
+		bind(VariablesWriter.class).to(CmdpVariablesWriter.class).asEagerSingleton();
+		// Optimizer binding to satisfy CalibrationModule even when calibration is deactivated
+		bind(Optimizer.class).to(StandardOptimizer.class).asEagerSingleton();
+
 		bindTripConstraintFactory(LOOP_CONSTRAINT_NAME).to(LoopModesConstraint.Factory.class);
 
 		bindCostModel(CAR_COST_MODEL_NAME).to(SwissCarCostModel.class);
