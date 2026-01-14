@@ -8,6 +8,10 @@ dependency-reduced-pom.xml
 *.idea
 simulation_output
 simulation_output_incentive
+simulation_output_1_CHF
+simulation_output_0_25_CHF
+simulation_output_0_75_CHF
+simulation_output_0_50_CHF
 Zurich_10pct
 *.DS_Store
 
